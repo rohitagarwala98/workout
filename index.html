@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Workout">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Workout</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#0a0a0b; --card:#16171a; --text:#ffffff; --muted:#8b9099; --accent:#c8ff2e; --accent-ink:#0a0a0b; --line:#25272c; --warn:#ff9f43; }
+  body { color-scheme: dark; }
+  h1 { font-size:28px; font-weight:800; letter-spacing:-.02em; }
+  .card { border-radius:18px; }
+  .card h3 { font-size:19px; font-weight:700; }
+  .prescr { font-weight:700; }
+  .tick { color:var(--accent-ink); }
+  .tabs button.on { color:var(--accent-ink); font-weight:700; }
+  .section-title { color:var(--accent); font-weight:700; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--text);
+         padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+  header { position:sticky; top:0; background:var(--bg); padding:14px 16px 8px; border-bottom:1px solid var(--line); z-index:1; }
+  h1 { font-size:22px; margin:0 0 8px; }
+  .tabs { display:flex; gap:8px; margin-bottom:8px; }
+  .tabs button { flex:1; padding:8px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:15px; }
+  .tabs button.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  select { width:100%; font-size:16px; padding:10px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--text); }
+  main { padding:12px 16px 40px; }
+  .section-title { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:20px 4px 8px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .card h3 { font-size:17px; margin:0 0 4px; }
+  .prescr { color:var(--accent); font-weight:600; font-size:15px; margin:0 0 4px; }
+  .home, .meta { color:var(--muted); font-size:14px; margin:0 0 6px; }
+  .target { font-size:14px; margin:0 0 6px; font-weight:600; }
+  .warn { font-size:14px; color:var(--warn); margin:0 0 8px; }
+  .sets { margin:8px 0; }
+  .set { display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line); }
+  .set.skipped { opacity:.5; }
+  .tick { width:40px; height:40px; border-radius:50%; border:2px solid var(--accent); background:var(--card); color:#fff; font-size:17px; font-weight:700; flex-shrink:0; }
+  .set.done .tick { background:var(--accent); }
+  .setlabel { font-size:14px; min-width:44px; }
+  label.rp, label.wt { display:flex; align-items:center; gap:4px; font-size:13px; color:var(--muted); }
+  input[type=number] { width:58px; min-height:40px; font-size:16px; padding:6px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); }
+  button.ghost { background:none; border:1px solid var(--line); color:var(--text); padding:8px 12px; min-height:40px; border-radius:10px; font-size:14px; }
+  .small { margin-left:auto; }
+  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+  .demo { font-size:14px; color:var(--accent); text-decoration:none; font-weight:600; margin-left:auto; padding:10px 0 10px 12px; }
+  .rest-day { text-align:center; padding:40px 16px; color:var(--muted); }
+  .hist-entry { font-size:14px; margin:4px 0; color:var(--muted); }
+  .hist-day { font-weight:600; font-size:16px; margin:0 0 4px; }
+  .datebar { display:flex; align-items:center; gap:10px; margin:0 0 10px; font-size:15px; font-weight:600; }
+  .datebar .dlabel { color:var(--muted); font-weight:500; }
+  .tick-wide { padding:10px 16px; border-radius:12px; border:1px solid var(--accent); background:transparent; color:var(--accent); font-size:15px; font-weight:700; }
+  .tick-wide.on { background:var(--accent); color:var(--accent-ink); }
+  .cal-head { display:flex; justify-content:space-between; align-items:center; margin:6px 0 12px; }
+  .cal-head strong { font-size:17px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-dow { font-size:12px; color:var(--muted); text-align:center; padding-bottom:4px; }
+  .cal-cell { aspect-ratio:1; background:var(--card); border:1px solid var(--line); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:15px; color:var(--text); padding:0; }
+  .cal-cell.blank { background:none; border:none; }
+  .cal-cell.today { border-color:var(--accent); }
+  .cal-cell.sel { background:var(--accent); color:var(--accent-ink); }
+  .cal-cell.sel .dot { background:var(--accent-ink) !important; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-top:4px; background:transparent; }
+  .dot.done { background:#34d17a; }
+  .dot.missed { background:#ff4d4d; }
+  .legend { display:flex; gap:16px; font-size:13px; color:var(--muted); margin:14px 0 6px; }
+  .legend span { display:flex; align-items:center; gap:6px; }
+  .legend .dot { margin:0; }
+  .cal-note { font-size:13px; color:var(--muted); margin:0 0 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Today</h1>
+  <div class="tabs">
+    <button id="tabSession" class="on" aria-pressed="true">Session</button>
+    <button id="tabCal" aria-pressed="false">Calendar</button>
+  </div>
+  <select id="daySelect" aria-label="Choose day">
+    <option value="Mon">Monday</option><option value="Tue">Tuesday</option><option value="Wed">Wednesday</option>
+    <option value="Thu">Thursday</option><option value="Fri">Friday</option><option value="Sat">Saturday</option>
+    <option value="Sun">Sunday</option>
+  </select>
+</header>
+<main id="content"></main>
+
+<script>
+// ---------- Plan (from the Phase 2 workout plan) ----------
+const PLAN = {
+  Mon: { title: "A: Lower strength", minutes: 85,
+    exercises: [
+      { n: "Back squat", s: "4 × 6–8", rest: "3 min", home: "Goblet squat, 4 × 8–10", demo: "back squat" },
+      { n: "Romanian deadlift (barbell)", s: "3 × 8–10", rest: "2 min", home: "Dumbbell RDL, 3 × 8–10", demo: "romanian deadlift" },
+      { n: "Leg press", s: "3 × 10–12", rest: "90 s", home: "Dumbbell split squat, 3 × 10 each leg", demo: "leg press" },
+      { n: "Seated or lying leg curl", s: "3 × 10–12", rest: "90 s", home: "Dumbbell hamstring curl on floor, 3 × 10–12", demo: "leg curl" },
+      { n: "Hip thrust", s: "3 × 10", rest: "90 s", home: "Dumbbell hip thrust, 3 × 10", demo: "hip thrust" },
+      { n: "Standing calf raise", s: "3 × 12–15", rest: "60 s", home: "Single-leg dumbbell calf raise, 3 × 12 each", demo: "standing calf raise" } ],
+    core: [
+      { n: "Dead bug", s: "3 × 8 each side", rest: "45 s", demo: "dead bug" },
+      { n: "Side plank", s: "2 × 30 s each side", rest: "45 s", demo: "side plank" },
+      { n: "Pallof press", s: "3 × 10 each side", rest: "60 s", demo: "pallof press" } ] },
+  Tue: { title: "B: Upper strength and grip", minutes: 85,
+    exercises: [
+      { n: "Bench press", s: "4 × 6–8", rest: "2.5 min", home: "Dumbbell floor press, 4 × 8–10", demo: "bench press" },
+      { n: "Lat pulldown or pull-up", s: "4 × 8–10", rest: "2 min", home: "One-arm dumbbell row, 4 × 8–10 each", demo: "lat pulldown" },
+      { n: "Overhead press", s: "3 × 8", rest: "2 min", home: "Dumbbell overhead press, 3 × 8–10", demo: "overhead press" },
+      { n: "Chest-supported or seated row", s: "3 × 10", rest: "90 s", home: "Dumbbell chest-supported row on bench, 3 × 10", demo: "seated cable row" },
+      { n: "Face pull or rear delt fly", s: "3 × 12–15", rest: "60 s", home: "Dumbbell rear delt fly, 3 × 12–15", demo: "face pull" },
+      { n: "Dead hang", s: "3 × 30–40 s", rest: "60 s", home: "Towel dead hang from a bar, 3 × 30 s", demo: "dead hang grip" },
+      { n: "Plate pinch hold", s: "3 × 30 s", rest: "60 s", home: "Two dumbbells held by the plates, 3 × 30 s", demo: "plate pinch hold" } ] },
+  Wed: { title: "Zone 2 cardio", cardio: "40 minutes at 135–145 bpm. You should be able to talk in full sentences." },
+  Thu: { title: "C: Lower power and hips", minutes: 85,
+    exercises: [
+      { n: "Trap bar or conventional deadlift", s: "4 × 4–6", rest: "3 min", home: "Dumbbell deadlift, 4 × 6–8", demo: "trap bar deadlift" },
+      { n: "Bulgarian split squat", s: "3 × 8–10 each leg", rest: "2 min", home: "Rear-foot dumbbell split squat, 3 × 8–10 each", demo: "bulgarian split squat" },
+      { n: "Leg extension", s: "3 × 12–15", rest: "60 s", home: "Dumbbell squat with heels raised, 3 × 12–15", demo: "leg extension" },
+      { n: "Hip abduction machine", s: "2 × 15", rest: "60 s", home: "Side-lying leg raise, 2 × 15 each", demo: "hip abduction machine" } ],
+    core: [
+      { n: "Cable crunch", s: "3 × 12", rest: "60 s", demo: "cable crunch" },
+      { n: "Hanging knee raise", s: "3 × 10", rest: "60 s", demo: "hanging knee raise" },
+      { n: "Suitcase carry", s: "3 × 30 m each side", rest: "60 s", demo: "suitcase carry" } ] },
+  Fri: { title: "D: Upper hypertrophy and carries", minutes: 85,
+    exercises: [
+      { n: "Incline dumbbell or machine press", s: "3 × 8–10", rest: "2 min", home: "Dumbbell incline press on bench, 3 × 8–10", demo: "incline dumbbell press" },
+      { n: "Single-arm cable or dumbbell row", s: "3 × 10 each", rest: "90 s", home: "Dumbbell row, 3 × 10 each", demo: "single arm cable row" },
+      { n: "Lateral raise", s: "3 × 12–15", rest: "60 s", home: "Dumbbell lateral raise, 3 × 12–15", demo: "lateral raise" },
+      { n: "Cable curl", s: "2 × 12–15", rest: "60 s", home: "Dumbbell curl, 2 × 12–15", demo: "cable curl" },
+      { n: "Triceps pushdown", s: "2 × 12–15", rest: "60 s", home: "Dumbbell overhead triceps extension, 2 × 12–15", demo: "triceps pushdown" },
+      { n: "Farmer carry", s: "4 × 40 m", rest: "90 s", home: "Dumbbell farmer carry, 4 × 40 m", demo: "farmer carry" },
+      { n: "Wrist roller or reverse wrist curl", s: "2 × 15", rest: "60 s", home: "Dumbbell reverse wrist curl, 2 × 15", demo: "wrist roller" } ] },
+  Sat: { title: "Zone 2 or walk", cardio: "40 minutes at 135–145 bpm, or a brisk walk. You should be able to talk in full sentences." },
+  Sun: { title: "Rest", rest: true }
+};
+
+const DAY_KEYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const LOWER_DAYS = ["Mon", "Thu"];
+
+// ---------- Storage (stays on this phone) ----------
+const STORE_KEY = "workout-app-v1";
+let store = loadStore();
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { days: {} }; }
+  catch (e) { return { days: {} }; }
+}
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+
+// ---------- Dates ----------
+const pad = n => String(n).padStart(2, "0");
+function dateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+function todayDate() { return dateStr(new Date()); }
+function parseDate(ds) { const [y, m, d] = ds.split("-").map(Number); return new Date(y, m - 1, d); }
+function fmtDate(ds) { return parseDate(ds).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); }
+function nowIso() { return new Date().toISOString(); }
+function demoLink(text) { return "youtube://www.youtube.com/results?search_query=" + encodeURIComponent(text + " exercise form"); }
+
+// ---------- State ----------
+let view = "session";
+let currentDate = todayDate();
+let currentDay = DAY_KEYS[new Date().getDay()];
+let calCursor = new Date();
+
+// "4 × 6–8" -> { count: 4, min: 6, max: 8 }
+function parseSets(s) {
+  const m = s.match(/^(\d+)\s*×\s*(.*)$/);
+  if (!m) return { count: 1, min: null, max: null };
+  const r = m[2].match(/(\d+)(?:–(\d+))?/);
+  return { count: +m[1], min: r ? +r[1] : null, max: r ? (r[2] ? +r[2] : +r[1]) : null };
+}
+// Timed holds show seconds, carries show metres, everything else shows reps
+function unitFor(item) {
+  if (/\d\s*s\b/.test(item.s)) return "sec";
+  if (/\d\s*m\b/.test(item.s)) return "m";
+  return "reps";
+}
+function itemsFor(dayKey) {
+  const p = PLAN[dayKey];
+  if (!p || !p.exercises) return [];
+  return p.exercises.map((e, i) => ({ ...e, key: "s" + i, kind: "strength" }))
+    .concat((p.core || []).map((e, i) => ({ ...e, key: "c" + i, kind: "core" })));
+}
+function sessionKey(dayKey) { return currentDate + "|" + dayKey; }
+function sessionFor(dayKey) {
+  const k = sessionKey(dayKey);
+  if (!store.days[k]) store.days[k] = { ex: {}, log: [], cardioDone: false };
+  return store.days[k];
+}
+
+// Most recent result for this exercise from any earlier session
+function lastResult(name, maxReps) {
+  const keys = Object.keys(store.days).sort().reverse();
+  for (const k of keys) {
+    const ex = Object.values(store.days[k].ex || {}).find(e => e.original === name);
+    if (!ex) continue;
+    const weighted = ex.sets.filter(s => s.done && s.weight != null);
+    if (!weighted.length) continue;
+    const hit = weighted.every(s => s.reps != null && maxReps != null && s.reps >= maxReps);
+    return { weight: weighted[weighted.length - 1].weight, hit };
+  }
+  return null;
+}
+// Target for the next session: add load if every set hit the top of the rep range
+function targetFor(item, dayKey) {
+  if (item.kind !== "strength") return null;
+  const last = lastResult(item.n, parseSets(item.s).max);
+  if (!last) return null;
+  const inc = LOWER_DAYS.includes(dayKey) ? 2.5 : 1.25;
+  return last.hit ? last.weight + inc : last.weight;
+}
+// Strength falling two sessions in a row -> suggest a deload
+function trendNote(name) {
+  const vols = [];
+  Object.keys(store.days).sort().reverse().forEach(k => {
+    const ex = Object.values(store.days[k].ex || {}).find(e => e.original === name);
+    if (!ex) return;
+    const v = ex.sets.filter(s => s.done && s.weight && s.reps).reduce((a, s) => a + s.weight * s.reps, 0);
+    if (v > 0) vols.push(v);
+  });
+  if (vols.length >= 3 && vols[0] < vols[1] && vols[1] < vols[2]) {
+    return "Strength has dropped for two sessions in a row. Consider a lighter deload week.";
+  }
+  return "";
+}
+function ensureEx(sess, dayKey, item) {
+  if (!sess.ex[item.key]) {
+    const p = parseSets(item.s);
+    const target = targetFor(item, dayKey);
+    const sets = [];
+    for (let i = 0; i < p.count; i++) sets.push({ done: false, skipped: false, reps: p.min, weight: target, doneAt: null });
+    sess.ex[item.key] = { name: item.n, original: item.n, swapped: false, target, sets };
+  }
+  return sess.ex[item.key];
+}
+
+// Green = logged work on that date; red = a training day in the past with nothing logged
+function dayStatus(ds) {
+  const plan = PLAN[DAY_KEYS[parseDate(ds).getDay()]];
+  const done = Object.keys(store.days).filter(k => k.startsWith(ds + "|")).some(k => {
+    const d = store.days[k];
+    return d.cardioDone || Object.values(d.ex || {}).some(e => e.sets.some(s => s.done));
+  });
+  if (done) return "done";
+  if (plan.rest) return null;
+  if (ds < todayDate()) return "missed";
+  return null;
+}
+
+// ---------- Session screen ----------
+function setRow(item, s, i) {
+  const cls = ["set", s.done ? "done" : "", s.skipped ? "skipped" : ""].join(" ");
+  const unit = unitFor(item);
+  const weight = item.kind === "strength"
+    ? `<label class="wt"><input type="number" inputmode="decimal" step="0.5" value="${s.weight ?? ""}" data-ex="${item.key}" data-set="${i}" data-field="weight" aria-label="Weight, set ${i + 1}"><span>kg</span></label>`
+    : "";
+  return `<div class="${cls}">
+    <button class="tick" data-act="tick" data-ex="${item.key}" data-set="${i}" aria-label="Mark set ${i + 1} done">${s.done ? "✓" : ""}</button>
+    <span class="setlabel">Set ${i + 1}</span>
+    <label class="rp"><input type="number" inputmode="numeric" value="${s.reps ?? ""}" data-ex="${item.key}" data-set="${i}" data-field="reps" aria-label="${unit}, set ${i + 1}"><span>${unit}</span></label>
+    ${weight}
+    <button class="ghost small" data-act="skip" data-ex="${item.key}" data-set="${i}">${s.skipped ? "Unskip" : "Skip"}</button>
+  </div>`;
+}
+function cardHtml(item, ex) {
+  let extra = "";
+  if (ex.swapped) extra += `<p class="home">Swapped from ${ex.original}</p>`;
+  if (item.kind === "strength" && ex.target != null) extra += `<p class="target">Target: ${ex.target} kg</p>`;
+  if (item.kind === "strength") {
+    const note = trendNote(ex.original);
+    if (note) extra += `<p class="warn">${note}</p>`;
+  }
+  const homeLine = item.home ? `<p class="home">Home alternative: ${item.home}</p>` : "";
+  const undo = ex.swapped ? `<button class="ghost" data-act="unswap" data-ex="${item.key}">Undo swap</button>` : "";
+  return `<article class="card">
+    <h3>${ex.name}</h3>
+    <p class="prescr">${item.s} · rest ${item.rest}</p>
+    ${homeLine}${extra}
+    <div class="sets">${ex.sets.map((s, i) => setRow(item, s, i)).join("")}</div>
+    <div class="actions">
+      <button class="ghost" data-act="swap" data-ex="${item.key}">Swap</button>${undo}
+      <a class="demo" href="${demoLink(item.demo)}">Watch demo ›</a>
+    </div>
+  </article>`;
+}
+function dateBar() {
+  const label = fmtDate(currentDate) + (currentDate === todayDate() ? " · Today" : "");
+  return `<div class="datebar"><button class="ghost" data-act="openCal">‹ Calendar</button><span class="dlabel">${label}</span></div>`;
+}
+function renderSession() {
+  const p = PLAN[currentDay];
+  document.getElementById("title").textContent = p.title;
+  document.getElementById("daySelect").style.display = "block";
+  const content = document.getElementById("content");
+  if (p.rest) { content.innerHTML = dateBar() + `<p class="rest-day">Rest day. Sleep well and walk.</p>`; save(); return; }
+  if (p.cardio) {
+    const s = sessionFor(currentDay);
+    content.innerHTML = dateBar() + `<article class="card"><h3>${p.title}</h3><p class="meta">${p.cardio}</p>
+      <div class="actions"><button class="tick-wide ${s.cardioDone ? "on" : ""}" data-act="cardio">${s.cardioDone ? "✓ Done" : "Mark done"}</button></div></article>`;
+    save(); return;
+  }
+  const sess = sessionFor(currentDay);
+  const cards = itemsFor(currentDay).map(item => ({ item, ex: ensureEx(sess, currentDay, item) }));
+  let total = 0, done = 0;
+  cards.forEach(c => { total += c.ex.sets.length; done += c.ex.sets.filter(s => s.done).length; });
+  let html = dateBar() + `<p class="meta">${done} of ${total} sets done · about ${p.minutes} minutes</p>`;
+  const strength = cards.filter(c => c.item.kind === "strength");
+  const core = cards.filter(c => c.item.kind === "core");
+  html += `<div class="section-title">Strength</div>` + strength.map(c => cardHtml(c.item, c.ex)).join("");
+  if (core.length) html += `<div class="section-title">Core</div>` + core.map(c => cardHtml(c.item, c.ex)).join("");
+  if (sess.log.length) html += `<div class="section-title">Changes</div>` + sess.log.map(l => `<p class="hist-entry">${logLine(l)}</p>`).join("");
+  content.innerHTML = html;
+  save();
+}
+function logLine(l) {
+  const why = l.reason ? ` (${l.reason})` : "";
+  if (l.type === "swap") return `Swapped ${l.from} for ${l.to}${why}`;
+  if (l.type === "weight") return `${l.exercise}, set ${l.set}: ${l.to} kg instead of ${l.from} kg${why}`;
+  if (l.type === "skip") return `${l.exercise}, set ${l.set} skipped${why}`;
+  return "";
+}
+
+// ---------- Calendar screen ----------
+function renderCalendar() {
+  document.getElementById("title").textContent = "Calendar";
+  document.getElementById("daySelect").style.display = "none";
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay() + 6) % 7; // weeks start on Monday
+  const count = new Date(y, m + 1, 0).getDate();
+  const monthName = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const today = todayDate();
+  let cells = "";
+  for (let i = 0; i < offset; i++) cells += `<div class="cal-cell blank"></div>`;
+  for (let d = 1; d <= count; d++) {
+    const ds = y + "-" + pad(m + 1) + "-" + pad(d);
+    const st = dayStatus(ds);
+    const cls = ["cal-cell", ds === today ? "today" : "", ds === currentDate ? "sel" : ""].join(" ");
+    cells += `<button class="${cls}" data-date="${ds}" aria-label="${ds}">${d}<span class="dot ${st || ""}"></span></button>`;
+  }
+  content_html(`
+    <div class="cal-head"><button class="ghost" data-nav="-1" aria-label="Previous month">‹</button><strong>${monthName}</strong><button class="ghost" data-nav="1" aria-label="Next month">›</button></div>
+    <div class="cal-grid">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => `<div class="cal-dow">${d}</div>`).join("")}${cells}</div>
+    <div class="legend"><span><i class="dot done"></i>Done</span><span><i class="dot missed"></i>Not done or not logged</span></div>
+    <p class="cal-note">Tap any date to open that day's workout. Rest days and today (until you log it) have no dot.</p>`);
+}
+function content_html(html) { document.getElementById("content").innerHTML = html; }
+
+function render() { if (view === "calendar") renderCalendar(); else renderSession(); }
+
+function openDate(ds) {
+  currentDate = ds;
+  currentDay = DAY_KEYS[parseDate(ds).getDay()];
+  document.getElementById("daySelect").value = currentDay;
+  setView("session");
+}
+function setView(v) {
+  view = v;
+  document.getElementById("tabSession").classList.toggle("on", v === "session");
+  document.getElementById("tabCal").classList.toggle("on", v === "calendar");
+  if (v === "calendar") { const d = parseDate(currentDate); calCursor = new Date(d.getFullYear(), d.getMonth(), 1); }
+  render();
+}
+
+// ---------- Actions ----------
+document.getElementById("content").addEventListener("click", (e) => {
+  const nav = e.target.closest("[data-nav]");
+  if (nav) { calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + Number(nav.dataset.nav), 1); renderCalendar(); return; }
+  const dateBtn = e.target.closest("[data-date]");
+  if (dateBtn) { openDate(dateBtn.dataset.date); return; }
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const act = btn.dataset.act;
+  if (act === "openCal") { setView("calendar"); return; }
+  const sess = sessionFor(currentDay);
+  if (act === "cardio") { sess.cardioDone = !sess.cardioDone; save(); render(); return; }
+
+  const key = btn.dataset.ex;
+  const i = btn.dataset.set !== undefined ? +btn.dataset.set : null;
+  const ex = sess.ex[key];
+  const item = itemsFor(currentDay).find(x => x.key === key);
+  if (!ex || !item) return;
+
+  if (act === "tick") {
+    const s = ex.sets[i];
+    s.done = !s.done;
+    s.skipped = false;
+    s.doneAt = s.done ? nowIso() : null;
+  } else if (act === "skip") {
+    const s = ex.sets[i];
+    if (!s.skipped) {
+      const reason = prompt("Why are you skipping this set? (optional)") || "";
+      s.skipped = true; s.done = false;
+      sess.log.push({ time: nowIso(), type: "skip", exercise: ex.name, set: i + 1, reason });
+    } else {
+      s.skipped = false;
+    }
+  } else if (act === "swap") {
+    const alt = item.home ? item.home.split(",")[0] : "";
+    const to = (alt && confirm(`Swap ${ex.name} for ${alt}?`)) ? alt : prompt("Swap to which exercise?");
+    if (!to) return;
+    const reason = prompt("Why are you swapping? (optional)") || "";
+    sess.log.push({ time: nowIso(), type: "swap", exercise: ex.name, from: ex.name, to, reason });
+    ex.name = to; ex.swapped = true;
+  } else if (act === "unswap") {
+    sess.log.push({ time: nowIso(), type: "swap", exercise: ex.name, from: ex.name, to: ex.original, reason: "back to plan" });
+    ex.name = ex.original; ex.swapped = false;
+  }
+  save();
+  render();
+});
+
+document.getElementById("content").addEventListener("change", (e) => {
+  const el = e.target;
+  if (!el.dataset.field) return;
+  const sess = sessionFor(currentDay);
+  const ex = sess.ex[el.dataset.ex];
+  const i = +el.dataset.set;
+  const s = ex.sets[i];
+  const val = el.value === "" ? null : parseFloat(el.value);
+  if (el.dataset.field === "reps") {
+    s.reps = val;
+  } else {
+    const from = s.weight ?? ex.target;
+    if (from != null && val != null && val !== from) {
+      const reason = prompt(`Why ${val} kg instead of ${from} kg? (optional)`) || "";
+      sess.log.push({ time: nowIso(), type: "weight", exercise: ex.name, set: i + 1, from, to: val, reason });
+    }
+    s.weight = val;
+  }
+  save();
+  render();
+});
+
+document.getElementById("tabSession").addEventListener("click", () => setView("session"));
+document.getElementById("tabCal").addEventListener("click", () => setView("calendar"));
+const select = document.getElementById("daySelect");
+select.value = currentDay;
+select.addEventListener("change", () => { currentDay = select.value; render(); });
+render();
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js");
+</script>
+</body>
+</html>
